@@ -25,7 +25,7 @@ const config = {
         update,
     },
     fps: {
-        target: 30, // Limita a 30 FPS para economizar bateria. util pro mobile
+        target: 60, // Limita FPS para economizar bateria. Util pro mobile
         forceSetTimeOut: true
     }
 };
@@ -34,35 +34,31 @@ const game = new Phaser.Game(config);
 
 let player;
 let otherPlayers = {}; // Para rastrear outros jogadores
-let moveWithMouse = false; // Flag para saber se deve mover com o clique
+let cursors;
+let target = null; // Armazena o destino do clique
 
-function preload() {
-    // this.load.image("player", "path/to/player.png"); // Substitua pelo caminho da sprite
-}
+function preload() { }
 
 function create() {
-
-    // Criando o jogador local
+    // Criar jogador (quadrado vermelho)
     // player = this.physics.add.image(400, 300, "player");
-    const graphics = this.add.graphics();
-    graphics.fillStyle(0xff0000, 1); // Vermelho, opacidade 1
     player = this.add.rectangle(400, 300, 50, 50, 0xff0000); // Criar quadrado
+    this.physics.world.enable(player);
 
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true); // Impede sair da tela
+    // Permitir colisão com as bordas da tela
+    player.body.setCollideWorldBounds(true);
 
-    // Movendo o jogador com as teclas
-    this.cursors = this.input.keyboard.createCursorKeys();
+    // Adicionar controles de teclado (WASD e setas)
+    cursors = {
+        up: this.input.keyboard.addKeys({ key1: "W", key2: "UP" }),
+        down: this.input.keyboard.addKeys({ key1: "S", key2: "DOWN" }),
+        left: this.input.keyboard.addKeys({ key1: "A", key2: "LEFT" }),
+        right: this.input.keyboard.addKeys({ key1: "D", key2: "RIGHT" })
+    };
 
-    // Movimento SOMENTE quando o mouse for clicado
+    // Detectar clique do mouse/tela para definir destino
     this.input.on("pointerdown", (pointer) => {
-        moveWithMouse = true; // Ativa o movimento com o mouse
-        movePlayerTo(pointer.x, pointer.y);
-    });
-
-    // Desativa o movimento quando soltar o clique
-    this.input.on("pointerup", () => {
-        moveWithMouse = false;
+        target = { x: pointer.x, y: pointer.y }; // Salva o destino do clique
     });
 
     // Enviar a posição inicial para o servidor
@@ -74,18 +70,36 @@ function create() {
             if (id !== socket.id) {
                 if (!otherPlayers[id]) {
                     // Criar um novo jogador
-                    otherPlayers[id] = this.physics.add.image(
-                        players[id].x,
-                        players[id].y,
-                        "player"
-                    );
+                    otherPlayers[id] = this.add.rectangle(players[id].x, players[id].y, 50, 50, 0x0000ff);
+                    this.physics.world.enable(otherPlayers[id]);
+                    otherPlayers[id].body.setCollideWorldBounds(true); // Para evitar sair da tela
                 } else {
-                    // Atualizar posição do jogador existente
-                    otherPlayers[id].setPosition(players[id].x, players[id].y);
+                    const targetX = players[id].x;
+                    const targetY = players[id].y;
+                    const speed = 200; // Velocidade do movimento
+
+                    // Calcular a distância atual
+                    const distance = Phaser.Math.Distance.Between(
+                        otherPlayers[id].x,
+                        otherPlayers[id].y,
+                        targetX,
+                        targetY
+                    );
+
+
+                    // Se a distância for maior que 5 pixels, mover o jogador
+                    if (distance > 5) {
+                        this.physics.moveTo(otherPlayers[id], targetX, targetY, speed);
+                    } else {
+                        // Quando estiver perto o suficiente, parar o movimento
+                        otherPlayers[id].body.setVelocity(0, 0);
+                        otherPlayers[id].setPosition(targetX, targetY); // Garante que não passe do ponto
+                    }
                 }
             }
         }
     });
+
 
     // Remover jogadores desconectados
     socket.on("playerDisconnected", (id) => {
@@ -100,27 +114,39 @@ function update() {
     const speed = 200;
     let moved = false;
 
-    // Movimento do jogador
-    if (this.cursors.left.isDown) {
-        player.x -= speed * this.game.loop.delta / 1000;
+    // Movimento pelo teclado
+    if (cursors.left.key1.isDown || cursors.left.key2.isDown) {
+        player.body.setVelocityX(-speed);
         moved = true;
-    } else if (this.cursors.right.isDown) {
-        player.x += speed * this.game.loop.delta / 1000;
+    } else if (cursors.right.key1.isDown || cursors.right.key2.isDown) {
+        player.body.setVelocityX(speed);
         moved = true;
+    } else {
+        player.body.setVelocityX(0);
     }
 
-    if (this.cursors.up.isDown) {
-        player.y -= speed * this.game.loop.delta / 1000;
+    if (cursors.up.key1.isDown || cursors.up.key2.isDown) {
+        player.body.setVelocityY(-speed);
         moved = true;
-    } else if (this.cursors.down.isDown) {
-        player.y += speed * this.game.loop.delta / 1000;
+    } else if (cursors.down.key1.isDown || cursors.down.key2.isDown) {
+        player.body.setVelocityY(speed);
         moved = true;
+    } else {
+        player.body.setVelocityY(0);
     }
 
     // Enviar a posição atual para o servidor, se o jogador se mover
-    if (moved) movePlayerTo(player.x, player.y);
-}
+    if (moved) socket.emit("playerMove", { x: player.x, y: player.y });
 
-function movePlayerTo(x, y) {
-    socket.emit("playerMove", { x: x, y: y });
+    // Movimento suave até o clique do mouse
+    if (target) {
+        socket.emit("playerMove", { x: target.x, y: target.y });
+        this.physics.moveTo(player, target.x, target.y, speed);
+
+        // Para o movimento quando o jogador chega perto do destino
+        if (Phaser.Math.Distance.Between(player.x, player.y, target.x, target.y) < 5) {
+            player.body.setVelocity(0);
+            target = null; // Remove o alvo
+        }
+    }
 }
