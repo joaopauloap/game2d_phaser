@@ -88,7 +88,7 @@ function create() {
 
 
                     // Se a distância for maior que 5 pixels, mover o jogador
-                    if (distance > 5) {
+                    if (distance > 100) {
                         this.physics.moveTo(otherPlayers[id], targetX, targetY, speed);
                     } else {
                         // Quando estiver perto o suficiente, parar o movimento
