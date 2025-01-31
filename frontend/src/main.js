@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 import { io } from "socket.io-client";
 
-// const socket = io("http://localhost:4000"); // Conectando ao servidor
+//const socket = io("http://localhost:4000"); // Conectando ao servidor
 const socket = io("http://45.7.108.155:4000");
+
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }
 
@@ -73,6 +74,10 @@ const config = {
     width: 800,
     height: 600,
     backgroundColor: 0x404040,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     physics: {
         default: "arcade",
         arcade: { debug: false }
