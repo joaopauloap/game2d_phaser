@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 import { io } from "socket.io-client";
 
-//const socket = io("http://localhost:4000"); // Conectando ao servidor
-const socket = io("http://45.7.108.155:4000");
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.');
+const apiBaseURL = isLocal ? 'http://192.168.0.4:4000' : "http://45.7.108.155:4000";
+const socket = io(apiBaseURL);
 
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }

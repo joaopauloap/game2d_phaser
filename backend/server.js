@@ -10,6 +10,8 @@ const PLAYER_RADIUS = 20;
 PLAYER_MASS = 100;
 let players = {};
 
+console.log("Listening on port 4000...");
+
 io.on("connection", (socket) => {
     console.log("New player connected", socket.id);
 
