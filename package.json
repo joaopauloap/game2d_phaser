@@ -1,0 +1,22 @@
+{
+  "name": "game2d_phaser",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-backend": "cd backend && npm install && node server.js & cd ..",
+    "start-frontend": "cd frontend && npx vite build && npx serve dist -s & cd ..",
+    "deploy": "git pull && concurrently \"npm run start-frontend\" \"npm run start-backend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joaopauloap/game2d_phaser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joaopauloap/game2d_phaser/issues"
+  },
+  "homepage": "https://github.com/joaopauloap/game2d_phaser#readme",
+  "description": ""
+}
