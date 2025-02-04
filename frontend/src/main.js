@@ -15,7 +15,12 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }
 
     preload() {
-        this.load.image("playerSprite", "assets/ball.png"); // Substitua com a imagem do player
+        this.load.image("sprite1", "assets/ball1.png"); //imagem do player 
+        this.load.image("sprite2", "assets/ball2.png");
+        this.load.image("sprite3", "assets/ball3.png");
+        this.load.image("sprite4", "assets/ball4.png");
+        this.load.image("sprite5", "assets/ball5.png");
+        this.load.image("sprite6", "assets/ball6.png");
     }
 
     create() {
@@ -25,23 +30,35 @@ class MainScene extends Phaser.Scene {
         // Criando um grupo de física para os jogadores
         this.playerGroup = this.physics.add.group();
 
+        let button = this.add.text(0, 0, 'Trocar Sprite', {
+            fontSize: '15px',
+            fill: '#fff',
+            backgroundColor: '#000'
+        }).setInteractive();
+
+
         socket.on("updatePlayers", (serverPlayers) => {
             for (const id in serverPlayers) {
                 const serverPlayer = serverPlayers[id];
 
                 if (!this.players[id]) {
                     // Criar o player como um sprite com física
-                    const player = this.add.image(100, 100, "playerSprite");
-                    player.displayWidth = 50; // Define a largura para 200 pixels
-                    player.displayHeight = 50; // Define a altura para 100 pixels
+                    const player = this.add.image(100, 100, `sprite${Phaser.Math.Between(1, 6)}`);
+                    player.setDisplaySize(50, 50);  //redimensionar sprite para 50x50 px
                     // const player = this.add.circle(100, 100, 20, Phaser.Display.Color.HexStringToColor(serverPlayer.color).color);
                     this.playerGroup.add(player); // Adiciona ao grupo de colisão
                     this.players[id] = player;
+                    button.on('pointerdown', () => {
+                        socket.emit("updateSprite", { id: id, sprite: `sprite${Phaser.Math.Between(1, 6)}` });
+                    });
                 }
 
                 // Atualiza a posição do player
                 this.players[id].x = serverPlayer.x;
                 this.players[id].y = serverPlayer.y;
+                this.players[id].setTexture(serverPlayer.sprite);
+                this.players[id].setDisplaySize(50, 50);
+
             }
 
             // Remover jogadores desconectados

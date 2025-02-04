@@ -26,8 +26,9 @@ io.on("connection", (socket) => {
 
     players[socket.id].targetX = players[socket.id].position.x;
     players[socket.id].targetY = players[socket.id].position.y;
-    players[socket.id].color = getRandomColor();
+    players[socket.id].sprite = `sprite${getRandomInt(1, 6)}`;
     players[socket.id].controlMode = "mouse";
+    // players[socket.id].color = getRandomColor();
 
     socket.on("moveTo", (position) => {
         if (players[socket.id]) {
@@ -44,6 +45,13 @@ io.on("connection", (socket) => {
             if (velocity.x !== 0 || velocity.y !== 0) {
                 players[socket.id].controlMode = "keyboard";
             }
+        }
+    });
+
+    socket.on("updateSprite", (player) => {
+        if (players[socket.id]) {
+            console.log(`${player.id}: changed sprite to ${player.sprite}`);
+            players[socket.id].sprite = player.sprite;
         }
     });
 
@@ -93,13 +101,18 @@ setInterval(() => {
         updatedPlayers[id] = {
             x: player.position.x,
             y: player.position.y,
-            color: player.color,
+            sprite: player.sprite
+            // color: player.color,
         };
     }
 
     io.emit("updatePlayers", updatedPlayers);
 }, 16);
 
-function getRandomColor() {
-    return "#" + Math.floor(Math.random() * 16777215).toString(16);
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// function getRandomColor() {
+//     return "#" + Math.floor(Math.random() * 16777215).toString(16);
+// }
