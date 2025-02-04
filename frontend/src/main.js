@@ -15,7 +15,7 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }
 
     preload() {
-        // this.load.image("playerSprite", "player.png"); // Substitua com a imagem do player
+        this.load.image("playerSprite", "assets/ball.png"); // Substitua com a imagem do player
     }
 
     create() {
@@ -31,8 +31,10 @@ class MainScene extends Phaser.Scene {
 
                 if (!this.players[id]) {
                     // Criar o player como um sprite com física
-                    // const player = this.physics.add.sprite(serverPlayer.x, serverPlayer.y, "playerSprite");
-                    const player = this.add.circle(100, 100, 20, Phaser.Display.Color.HexStringToColor(serverPlayer.color).color);
+                    const player = this.add.image(100, 100, "playerSprite");
+                    player.displayWidth = 50; // Define a largura para 200 pixels
+                    player.displayHeight = 50; // Define a altura para 100 pixels
+                    // const player = this.add.circle(100, 100, 20, Phaser.Display.Color.HexStringToColor(serverPlayer.color).color);
                     this.playerGroup.add(player); // Adiciona ao grupo de colisão
                     this.players[id] = player;
                 }

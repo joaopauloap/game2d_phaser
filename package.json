@@ -4,9 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-backend": "cd backend && npm install && node server.js & cd ..",
-    "start-frontend": "cd frontend && npm install && npx vite build && npx serve dist -s & cd ..",
-    "deploy": "git pull && npm install && concurrently \"npm run start-frontend\" \"npm run start-backend\""
+    "deploy": "git pull && npm install && concurrently \"npm run start-frontend\" \"npm run start-backend\"",
+    "start": "concurrently \"npm run start-frontend\" \"npm run start-backend\"",
+    "start:backend": "cd backend && npm install && node server.js & cd ..",
+    "start:frontend": "cd frontend && npm install && npx vite build && npx serve dist -s & cd .."
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

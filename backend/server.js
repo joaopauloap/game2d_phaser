@@ -93,7 +93,7 @@ setInterval(() => {
         updatedPlayers[id] = {
             x: player.position.x,
             y: player.position.y,
-            color: getRandomColor(),
+            color: player.color,
         };
     }
 
