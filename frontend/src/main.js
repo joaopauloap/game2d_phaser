@@ -21,6 +21,7 @@ class MainScene extends Phaser.Scene {
         this.load.image("sprite4", "assets/ball4.png");
         this.load.image("sprite5", "assets/ball5.png");
         this.load.image("sprite6", "assets/ball6.png");
+        this.load.html("chatForm", "assets/chat.html"); // Arquivo HTML do chat
     }
 
     create() {
@@ -78,6 +79,33 @@ class MainScene extends Phaser.Scene {
             const targetPosition = { x: pointer.x, y: pointer.y };
             socket.emit("moveTo", targetPosition);
         });
+
+
+
+        // Criar interface do chat
+        this.chatBox = this.add.dom(200, 500).createFromCache("chatForm");
+
+        // Capturar entrada do chat
+        this.chatBox.addListener("submit");
+        this.chatBox.on("submit", (event) => {
+            event.preventDefault();
+            let input = this.chatBox.getChildByName("chatInput");
+            if (input.value !== "") {
+                socket.emit("chatMessage", input.value);
+                input.value = "";
+            }
+        });
+
+        // Criar área de mensagens
+        // this.messages = this.add.text(10, 500, "", { fontSize: "16px", fill: "#fff" });
+
+        // Receber mensagens do servidor
+        socket.on("chatMessage", (data) => {
+            // this.messages.text += `\n${data.id}: ${data.message}`;
+            const chatArea = document.getElementById("chatArea");
+            chatArea.value += `\n${data.id.substring(0,4)}: ${data.message}`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
     }
 
     update() {
@@ -107,6 +135,10 @@ const config = {
     physics: {
         default: "arcade",
         arcade: { debug: false }
+    },
+    parent: "game-container",
+    dom: {
+        createContainer: true
     },
     scene: MainScene
 };

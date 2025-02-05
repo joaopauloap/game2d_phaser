@@ -55,6 +55,10 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("chatMessage", (msg) => {
+        io.emit("chatMessage", { id: socket.id, message: msg });
+    });
+
     socket.on("disconnect", () => {
         Matter.World.remove(world, players[socket.id]);
         delete players[socket.id];

@@ -7,7 +7,8 @@
     "deploy": "git pull && npm install && concurrently \"npm run start:frontend\" \"npm run start:backend\"",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
     "start:backend": "cd backend && npm install && node server.js & cd ..",
-    "start:frontend": "cd frontend && npm install && npx vite build && npx serve dist -s & cd .."
+    "start:frontend": "cd frontend && npm install && npx vite build && npx serve dist & cd ..",
+    "dev": "cd frontend && npx vite"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
