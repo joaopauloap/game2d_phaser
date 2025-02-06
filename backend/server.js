@@ -26,7 +26,8 @@ io.on("connection", (socket) => {
 
     players[socket.id].targetX = players[socket.id].position.x;
     players[socket.id].targetY = players[socket.id].position.y;
-    players[socket.id].sprite = `sprite${getRandomInt(1, 6)}`;
+    players[socket.id].avatar = `avatar${getRandomInt(1, 6)}`;
+    players[socket.id].nick = socket.id.substring(0, 4);
     players[socket.id].controlMode = "mouse";
     // players[socket.id].color = getRandomColor();
 
@@ -48,15 +49,25 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("updateSprite", (player) => {
+    socket.on("updateAvatar", (avatar) => {
         if (players[socket.id]) {
-            console.log(`${player.id}: changed sprite to ${player.sprite}`);
-            players[socket.id].sprite = player.sprite;
+            const msg = `${players[socket.id].nick}: changed avatar to ${avatar}`;
+            console.log(msg);
+            players[socket.id].avatar = avatar;
+        }
+    });
+
+    socket.on("updateNick", (newNick) => {
+        if (players[socket.id]) {
+            const msg = `trocou o nick para ${newNick}`;
+            console.log(`${players[socket.id].nick}:${msg}`);
+            io.emit("chatMessage", { id: socket.id, nick: players[socket.id].nick, message: msg });
+            players[socket.id].nick = newNick;
         }
     });
 
     socket.on("chatMessage", (msg) => {
-        io.emit("chatMessage", { id: socket.id, message: msg });
+        io.emit("chatMessage", { id: socket.id, nick: players[socket.id].nick, message: msg });
     });
 
     socket.on("disconnect", () => {
@@ -105,7 +116,8 @@ setInterval(() => {
         updatedPlayers[id] = {
             x: player.position.x,
             y: player.position.y,
-            sprite: player.sprite
+            avatar: player.avatar,
+            nick: player.nick
             // color: player.color,
         };
     }

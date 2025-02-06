@@ -15,12 +15,12 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }
 
     preload() {
-        this.load.image("sprite1", "assets/ball1.png"); //imagem do player 
-        this.load.image("sprite2", "assets/ball2.png");
-        this.load.image("sprite3", "assets/ball3.png");
-        this.load.image("sprite4", "assets/ball4.png");
-        this.load.image("sprite5", "assets/ball5.png");
-        this.load.image("sprite6", "assets/ball6.png");
+        this.load.image("avatar1", "assets/ball1.png"); //imagem do player 
+        this.load.image("avatar2", "assets/ball2.png");
+        this.load.image("avatar3", "assets/ball3.png");
+        this.load.image("avatar4", "assets/ball4.png");
+        this.load.image("avatar5", "assets/ball5.png");
+        this.load.image("avatar6", "assets/ball6.png");
         this.load.html("chatForm", "assets/chat.html"); // Arquivo HTML do chat
     }
 
@@ -31,33 +31,22 @@ class MainScene extends Phaser.Scene {
         // Criando um grupo de física para os jogadores
         this.playerGroup = this.physics.add.group();
 
-        let button = this.add.text(0, 0, 'Trocar Sprite', {
-            fontSize: '15px',
-            fill: '#fff',
-            backgroundColor: '#000'
-        }).setInteractive();
-
-
         socket.on("updatePlayers", (serverPlayers) => {
             for (const id in serverPlayers) {
                 const serverPlayer = serverPlayers[id];
 
                 if (!this.players[id]) {
-                    // Criar o player como um sprite com física
-                    const player = this.add.image(100, 100, `sprite${Phaser.Math.Between(1, 6)}`);
-                    player.setDisplaySize(50, 50);  //redimensionar sprite para 50x50 px
-                    // const player = this.add.circle(100, 100, 20, Phaser.Display.Color.HexStringToColor(serverPlayer.color).color);
+                    // Criar o player como um sprite
+                    const player = this.add.image(100, 100, `avatar${Phaser.Math.Between(1, 6)}`);
+                    player.setDisplaySize(50, 50);  //redimensionar avatar para 50x50 px
                     this.playerGroup.add(player); // Adiciona ao grupo de colisão
                     this.players[id] = player;
-                    button.on('pointerdown', () => {
-                        socket.emit("updateSprite", { id: id, sprite: `sprite${Phaser.Math.Between(1, 6)}` });
-                    });
                 }
 
                 // Atualiza a posição do player
                 this.players[id].x = serverPlayer.x;
                 this.players[id].y = serverPlayer.y;
-                this.players[id].setTexture(serverPlayer.sprite);
+                this.players[id].setTexture(serverPlayer.avatar);
                 this.players[id].setDisplaySize(50, 50);
 
             }
@@ -81,30 +70,74 @@ class MainScene extends Phaser.Scene {
         });
 
 
-
         // Criar interface do chat
-        this.chatBox = this.add.dom(200, 500).createFromCache("chatForm");
+        this.chatBox = this.add.dom(180, 500).createFromCache("chatForm");
+        const chatInput = document.getElementById("chatInput");
+
+        // Impede que o Phaser bloqueie o espaço e outras teclas ao digitar
+        chatInput.addEventListener("keydown", (event) => {
+            event.stopPropagation();
+        });
+
+        // Alternativamente, desativar controles do Phaser ao focar no input
+        chatInput.addEventListener("focus", () => {
+            this.input.keyboard.enabled = false;
+        });
+
+        //Reativar controles ao desfocar input
+        chatInput.addEventListener("blur", () => {
+            this.input.keyboard.enabled = true;
+        });
 
         // Capturar entrada do chat
         this.chatBox.addListener("submit");
         this.chatBox.on("submit", (event) => {
             event.preventDefault();
-            let input = this.chatBox.getChildByName("chatInput");
-            if (input.value !== "") {
-                socket.emit("chatMessage", input.value);
-                input.value = "";
+            if (chatInput.value !== "") {
+                if (chatInput.placeholder == "Digite o novo nick:") {
+                    socket.emit("updateNick", chatInput.value);
+                } else {
+                    socket.emit("chatMessage", chatInput.value);
+                }
+                chatInput.value = "";
+                chatInput.blur();
             }
         });
 
-        // Criar área de mensagens
-        // this.messages = this.add.text(10, 500, "", { fontSize: "16px", fill: "#fff" });
+        //Dar foco no chat ao pressionar ENTER
+        this.input.keyboard.on('keydown-ENTER', () => {
+            chatInput.focus();
+        });
 
         // Receber mensagens do servidor
         socket.on("chatMessage", (data) => {
-            // this.messages.text += `\n${data.id}: ${data.message}`;
             const chatArea = document.getElementById("chatArea");
-            chatArea.value += `\n${data.id.substring(0,4)}: ${data.message}`;
+            chatArea.value += `\n${data.nick}: ${data.message}`;
             chatArea.scrollTop = chatArea.scrollHeight;
+        });
+
+        //Botão de alterar nick
+        const nickButton = document.getElementById("nickButton");
+        nickButton.addEventListener("click", () => {
+            if (chatInput.value !== "" && chatInput.placeholder == "Digite o novo nick:") {
+                socket.emit("updateNick", chatInput.value);
+                chatInput.placeholder = "Digite sua mensagem...";
+                nickButton.innerText = "Nick";
+                nickButton.style = "color:#fff";
+                chatInput.value = "";
+                chatInput.blur();
+            } else {
+                chatInput.placeholder = "Digite o novo nick:";
+                chatInput.value = "";
+                nickButton.innerText = "OK";
+                nickButton.style = "color:#00ff00";
+            }
+        });
+
+        //Botão de trocar avatar
+        const avatarButton = document.getElementById("avatarButton");
+        avatarButton.addEventListener("click", () => {
+            socket.emit("updateAvatar", `avatar${Phaser.Math.Between(1, 6)}`);
         });
     }
 

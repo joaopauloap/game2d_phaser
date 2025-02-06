@@ -1,4 +1,14 @@
-<textarea id="chatArea" rows="4" cols="40" readonly></textarea>
-<form id="chatForm">
-    <input type="text" name="chatInput" placeholder="Digite sua mensagem..." autocomplete="off" />
-</form>
+<head>
+    <link rel="stylesheet" href="/assets/chat.css">
+</head>
+
+<body>
+    <textarea id="chatArea" rows="4" cols="40" readonly></textarea>
+    <div class="chatFormContainer">
+        <form id="chatForm">
+            <input type="text" id="chatInput" placeholder="Digite sua mensagem..." autocomplete="off" />
+        </form>
+        <button id="nickButton" class="button">Nick</button>
+        <button id="avatarButton" class="button">Avatar</button>
+    </div>
+</body>
