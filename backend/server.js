@@ -4,8 +4,8 @@ const io = require("socket.io")(4000, { cors: { origin: "*" } });
 const engine = Matter.Engine.create();
 engine.gravity.y = 0; // 🔹 Desativa a gravidade!
 const world = engine.world;
-const WORLD_WIDTH = 800;
-const WORLD_HEIGHT = 600;
+let WORLD_WIDTH = 800;
+let WORLD_HEIGHT = 600;
 const PLAYER_RADIUS = 20;
 PLAYER_MASS = 100;
 let players = {};
@@ -13,7 +13,7 @@ let players = {};
 console.log("Listening on port 4000...");
 
 io.on("connection", (socket) => {
-    console.log("New player connected", socket.id);
+    console.log("Novo jogador conectado", socket.id);
 
     // Criando um corpo físico para o player no Matter.js
     players[socket.id] = Matter.Bodies.circle(100, 100, PLAYER_RADIUS, {
@@ -30,6 +30,12 @@ io.on("connection", (socket) => {
     players[socket.id].nick = socket.id.substring(0, 4);
     players[socket.id].controlMode = "mouse";
     // players[socket.id].color = getRandomColor();
+
+    socket.on('screenSize', (data) => {
+        console.log(`Tamanho da tela recebido: ${data.width}x${data.height}`);
+        WORLD_HEIGHT = data.height;
+        WORLD_WIDTH = data.width;
+    });
 
     socket.on("moveTo", (position) => {
         if (players[socket.id]) {
@@ -51,7 +57,7 @@ io.on("connection", (socket) => {
 
     socket.on("updateAvatar", (avatar) => {
         if (players[socket.id]) {
-            const msg = `${players[socket.id].nick}: changed avatar to ${avatar}`;
+            const msg = `${players[socket.id].nick}: trocou avatar para ${avatar}`;
             console.log(msg);
             players[socket.id].avatar = avatar;
         }

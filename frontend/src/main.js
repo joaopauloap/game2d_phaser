@@ -29,7 +29,23 @@ class MainScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys(); // Captura teclado
 
         // Criando um grupo de física para os jogadores
-        this.playerGroup = this.physics.add.group();
+        this.playersPhisicsGroup = this.physics.add.group();
+
+        // Função para enviar tamanho da tela ao servidor
+        function sendScreenSize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            socket.emit('screenSize', { width, height });
+        }
+
+        // Enviar tamanho da tela ao conectar
+        socket.on('connect', () => {
+            sendScreenSize();
+        });
+
+        // Atualizar tamanho ao redimensionar a tela
+        window.addEventListener('resize', sendScreenSize);
+
 
         socket.on("updatePlayers", (serverPlayers) => {
             for (const id in serverPlayers) {
@@ -39,7 +55,7 @@ class MainScene extends Phaser.Scene {
                     // Criar o player como um sprite
                     const player = this.add.image(100, 100, `avatar${Phaser.Math.Between(1, 6)}`);
                     player.setDisplaySize(50, 50);  //redimensionar avatar para 50x50 px
-                    this.playerGroup.add(player); // Adiciona ao grupo de colisão
+                    this.playersPhisicsGroup.add(player); // Adiciona ao grupo de colisão
                     this.players[id] = player;
                 }
 
@@ -61,7 +77,7 @@ class MainScene extends Phaser.Scene {
         });
 
         // Adiciona colisão entre todos os jogadores
-        this.physics.add.collider(this.playerGroup, this.playerGroup);
+        this.physics.add.collider(this.playersPhisicsGroup, this.playersPhisicsGroup);
 
         // Captura o clique do mouse e envia para o servidor
         this.input.on('pointerdown', (pointer) => {
@@ -158,11 +174,11 @@ class MainScene extends Phaser.Scene {
 // Configuração do Phaser
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    // width: 800,
+    // height: 600,
     backgroundColor: 0x404040,
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     physics: {
