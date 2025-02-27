@@ -13,8 +13,9 @@ const socket = io(apiBaseURL);
 
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: "MainScene" }); }
-
+    
     preload() {
+        this.load.image("map", "assets/map.png");
         this.load.image("avatar1", "assets/ball1.png"); //imagem do player 
         this.load.image("avatar2", "assets/ball2.png");
         this.load.image("avatar3", "assets/ball3.png");
@@ -25,23 +26,44 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        this.players = {}; // Guarda os jogadores
-        this.cursors = this.input.keyboard.createCursorKeys(); // Captura teclado
 
-        // Criando um grupo de física para os jogadores
-        this.playersPhisicsGroup = this.physics.add.group();
+        let screenWidth = window.innerWidth;
+        let screenHeight = window.innerHeight;
 
         // Função para enviar tamanho da tela ao servidor
         function sendScreenSize() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            socket.emit('screenSize', { width, height });
+            screenWidth = window.innerWidth;
+            screenHeight = window.innerHeight;
+            socket.emit('screenSize', { screenWidth, screenHeight });
         }
 
         // Enviar tamanho da tela ao conectar
         socket.on('connect', () => {
             sendScreenSize();
         });
+
+
+        this.map = this.add.image(400, 300, 'map');
+        // const overlay = this.add.rectangle(400, 300, screenWidth, screenHeight, 0x000000, 0.5);
+        // overlay.setDepth(1);    // Garante que a máscara fique acima da imagem
+
+        // Criar a lanterna
+        this.lanterna = this.make.graphics();
+        this.lanterna.fillStyle(0xffffff, 1);
+        this.lanterna.slice(0, 0, 200, Phaser.Math.DegToRad(330), Phaser.Math.DegToRad(30), false);
+        this.lanterna.fillPath();
+
+        // Aplicar máscara
+        this.mask = this.lanterna.createGeometryMask();
+        this.map.setMask(this.mask);
+
+        this.players = {}; // Guarda os jogadores
+        this.cursors = this.input.keyboard.createCursorKeys(); // Captura teclado
+
+        // Criando um grupo de física para os jogadores
+        this.playersPhisicsGroup = this.physics.add.group();
+
+
 
         // Atualizar tamanho ao redimensionar a tela
         window.addEventListener('resize', sendScreenSize);
@@ -87,7 +109,7 @@ class MainScene extends Phaser.Scene {
 
 
         // Criar interface do chat
-        this.chatBox = this.add.dom(180, 500).createFromCache("chatForm");
+        this.chatBox = this.add.dom(180, 550).createFromCache("chatForm");
         const chatInput = document.getElementById("chatInput");
 
         // Impede que o Phaser bloqueie o espaço e outras teclas ao digitar
@@ -112,6 +134,11 @@ class MainScene extends Phaser.Scene {
             if (chatInput.value !== "") {
                 if (chatInput.placeholder == "Digite o novo nick:") {
                     socket.emit("updateNick", chatInput.value);
+                    chatInput.placeholder = "Digite sua mensagem...";
+                    nickButton.innerText = "Nick";
+                    nickButton.style = "color:#fff";
+                    chatInput.value = "";
+                    chatInput.blur();
                 } else {
                     socket.emit("chatMessage", chatInput.value);
                 }
@@ -166,6 +193,15 @@ class MainScene extends Phaser.Scene {
         if (this.cursors.right.isDown) velocity.x = 1;
         if (this.cursors.up.isDown) velocity.y = -1;
         if (this.cursors.down.isDown) velocity.y = 1;
+
+
+        let pointer = this.input.activePointer;     // Obter posição do mouse
+        let angle = Phaser.Math.Angle.Between(this.players[socket.id].x, this.players[socket.id].y, pointer.x, pointer.y);  // Calcular o ângulo entre o player e o ponteiro do mouse
+        this.players[socket.id].setRotation(angle); // Aplicar a rotação ao player
+
+        // Atualizar a lanterna para seguir o player
+        this.lanterna.setPosition(this.players[socket.id].x, this.players[socket.id].y);
+        this.lanterna.setRotation(angle);
 
         socket.emit("keyMovement", velocity);
     }
