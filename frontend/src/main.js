@@ -87,7 +87,7 @@ class MainScene extends Phaser.Scene {
 
 
         // Criar interface do chat
-        this.chatBox = this.add.dom(180, 500).createFromCache("chatForm");
+        this.chatBox = this.add.dom(180, 550).createFromCache("chatForm");
         const chatInput = document.getElementById("chatInput");
 
         // Impede que o Phaser bloqueie o espaço e outras teclas ao digitar
@@ -112,6 +112,11 @@ class MainScene extends Phaser.Scene {
             if (chatInput.value !== "") {
                 if (chatInput.placeholder == "Digite o novo nick:") {
                     socket.emit("updateNick", chatInput.value);
+                    chatInput.placeholder = "Digite sua mensagem...";
+                    nickButton.innerText = "Nick";
+                    nickButton.style = "color:#fff";
+                    chatInput.value = "";
+                    chatInput.blur();
                 } else {
                     socket.emit("chatMessage", chatInput.value);
                 }
